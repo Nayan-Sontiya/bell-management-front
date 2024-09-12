@@ -1,4 +1,3 @@
-// src/pages/BellFormPage.js
 import React, { useState, useEffect } from "react";
 import {
   TextField,
@@ -6,36 +5,38 @@ import {
   Container,
   Typography,
   Grid,
+  MenuItem,
+  Select,
+  InputLabel,
   FormControl,
-  FormLabel,
 } from "@mui/material";
-import { StaticDatePicker } from "@mui/x-date-pickers/StaticDatePicker";
-import { StaticTimePicker } from "@mui/x-date-pickers/StaticTimePicker";
-import dayjs from "dayjs";
 import { useLocation, useNavigate } from "react-router-dom";
 import { post, put } from "../utils/APIHandler"; // Import API utility functions
 
 const BellFormPage = () => {
   const { state } = useLocation(); // Retrieve state from navigate
   const { mode, bell } = state || {}; // Access mode and bell from state
-  const [bellName, setBellName] = useState(bell ? bell.bellName : "");
-  const [date, setDate] = useState(bell ? bell.dateTime : dayjs());
-  const [time, setTime] = useState(bell ? bell.dateTime : dayjs());
+
+  const [bellId, setBellId] = useState(bell ? bell.bellId : ""); // Initialize bellId state
+  const [bellName, setBellName] = useState(bell ? bell.bellName : ""); // Initialize bellName state
+  const [status, setStatus] = useState(bell ? bell.status : "active"); // Initialize status state
+  const [id, setId] = useState(bell ? bell._id : ""); // Initialize _id state (for existing records)
 
   const navigate = useNavigate();
 
   useEffect(() => {
     if (mode === "edit" && bell) {
+      setBellId(bell.bellId);
       setBellName(bell.bellName);
-      setDate(dayjs(bell.dateTime));
-      setTime(dayjs(bell.dateTime));
+      setStatus(bell.status); // Set status for the record
+      setId(bell._id); // Set _id for the record
     }
   }, [mode, bell]);
 
   const onSubmit = async (bellData) => {
     try {
       if (mode === "edit") {
-        await put(`/bells/${bell._id}`, bellData); // Update bell
+        await put(`/bells/${id}`, bellData); // Update bell using _id
       } else {
         await post("/bells", bellData); // Add new bell
       }
@@ -46,9 +47,8 @@ const BellFormPage = () => {
   };
 
   const handleSubmit = () => {
-    // Merge date and time for submission
-    const combinedDateTime = date.hour(time.hour()).minute(time.minute());
-    onSubmit({ bellName, dateTime: combinedDateTime });
+    const bellData = { bellId, bellName, status }; // Include status in the data to be submitted
+    onSubmit(bellData);
   };
 
   return (
@@ -58,6 +58,18 @@ const BellFormPage = () => {
       </Typography>
 
       <Grid container spacing={3}>
+        {/* Bell ID Field */}
+        <Grid item xs={12}>
+          <TextField
+            label="Bell ID"
+            value={bellId}
+            onChange={(e) => setBellId(e.target.value)}
+            fullWidth
+            required
+            margin="normal"
+          />
+        </Grid>
+
         {/* Bell Name Field */}
         <Grid item xs={12}>
           <TextField
@@ -70,49 +82,18 @@ const BellFormPage = () => {
           />
         </Grid>
 
-        {/* Date Picker */}
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth margin="normal">
-            <FormLabel component="legend" style={{ fontWeight: "bold" }}>
-              Select Date
-            </FormLabel>
-            <StaticDatePicker
-              displayStaticWrapperAs="desktop"
-              value={date}
-              onChange={(newDate) => setDate(newDate)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  InputLabelProps={{ shrink: false }} // Hide internal label
-                />
-              )}
-              disableOpenPicker
-              getOpenDialogAriaText={() => "Open date picker"}
-            />
-          </FormControl>
-        </Grid>
-
-        {/* Time Picker */}
-        <Grid item xs={12} sm={6}>
-          <FormControl fullWidth margin="normal">
-            <FormLabel component="legend" style={{ fontWeight: "bold" }}>
-              Select Time
-            </FormLabel>
-            <StaticTimePicker
-              displayStaticWrapperAs="desktop"
-              value={time}
-              onChange={(newTime) => setTime(newTime)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  fullWidth
-                  InputLabelProps={{ shrink: false }} // Hide internal label
-                />
-              )}
-              disableOpenPicker
-              getOpenDialogAriaText={() => "Open time picker"}
-            />
+        {/* Status Dropdown */}
+        <Grid item xs={12}>
+          <FormControl fullWidth required margin="normal">
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              label="Status"
+            >
+              <MenuItem value="active">Active</MenuItem>
+              <MenuItem value="inactive">Inactive</MenuItem>
+            </Select>
           </FormControl>
         </Grid>
       </Grid>

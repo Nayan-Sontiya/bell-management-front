@@ -10,11 +10,14 @@ import {
   Typography,
   Button,
   Fab,
+  IconButton,
   Container,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
-import { get } from "../utils/APIHandler";
+import { get, del } from "../utils/APIHandler"; // Import del function for deleting a bell
 
 const BellList = () => {
   const [bells, setBells] = useState([]);
@@ -23,7 +26,7 @@ const BellList = () => {
 
   const fetchBells = async () => {
     try {
-      const data = await get("/bells"); // Use the API handler's get method
+      const data = await get("/bells"); // Fetch bells from the backend
       setBells(data);
     } catch (error) {
       console.error("Failed to fetch bells:", error);
@@ -37,6 +40,19 @@ const BellList = () => {
   }, []);
 
   const handleOpen = () => navigate("/bell/add");
+
+  const handleEdit = (bell) => {
+    navigate(`/bell/${bell._id}/edit`, { state: { mode: "edit", bell } }); // Navigate to edit page with bell data
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await del(`/bells/${id}`); // Delete the bell by ID
+      setBells((prevBells) => prevBells.filter((bell) => bell._id !== id)); // Update UI by removing the deleted bell
+    } catch (error) {
+      console.error("Failed to delete bell:", error);
+    }
+  };
 
   return (
     <Container maxWidth="lg">
@@ -53,8 +69,8 @@ const BellList = () => {
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell align="left">Bell ID</TableCell>
                 <TableCell align="left">Bell Name</TableCell>
-                <TableCell align="left">Scheduled Date & Time</TableCell>
                 <TableCell align="left">Status</TableCell>
                 <TableCell align="center">Actions</TableCell>
               </TableRow>
@@ -62,7 +78,7 @@ const BellList = () => {
             <TableBody>
               {bells.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} align="center">
+                  <TableCell colSpan={5} align="center">
                     <Typography variant="body1" color="textSecondary">
                       No bells available
                     </Typography>
@@ -71,17 +87,27 @@ const BellList = () => {
               ) : (
                 bells.map((bell, index) => (
                   <TableRow key={index}>
+                    <TableCell align="left">{bell.bellId}</TableCell>
                     <TableCell align="left">{bell.bellName}</TableCell>
-                    <TableCell align="left">
-                      {new Date(bell.dateTime).toLocaleString()}
-                    </TableCell>
-                    <TableCell align="left">
-                      {bell.isFired ? "Fired" : "Not Fired"}
-                    </TableCell>
+                    <TableCell align="left">{bell.status}</TableCell>
                     <TableCell align="center">
-                      <Button size="small" variant="contained" color="primary">
-                        View Details
-                      </Button>
+                      {/* Edit Button */}
+                      <IconButton
+                        aria-label="edit"
+                        color="primary"
+                        onClick={() => handleEdit(bell)}
+                      >
+                        <EditIcon />
+                      </IconButton>
+
+                      {/* Delete Button */}
+                      <IconButton
+                        aria-label="delete"
+                        color="secondary"
+                        onClick={() => handleDelete(bell._id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))
@@ -91,7 +117,7 @@ const BellList = () => {
         </TableContainer>
       )}
 
-      {/* Floating Action Button */}
+      {/* Floating Action Button for Adding a Bell */}
       <Fab
         color="primary"
         aria-label="add"
