@@ -46,26 +46,28 @@ const Sidebar = () => {
             </StyledListItem>
           )}
         </NavLink>
-
         <Divider />
-
-        <NavLink to="/users" style={{ textDecoration: "none" }}>
+        <NavLink to="/schedules" style={{ textDecoration: "none" }}>
           {({ isActive }) => (
             <StyledListItem
               button
-              isActive={isActive || isOthersAlsoActive(["/users", "/user/add"])}
+              isActive={
+                isActive || isOthersAlsoActive(["/schedules", "/schedule/add"])
+              }
             >
               <StyledTypography
                 variant="body1"
                 isActive={
-                  isActive || isOthersAlsoActive(["/users", "/user/add"])
+                  isActive ||
+                  isOthersAlsoActive(["/schedules", "/schedule/add"])
                 }
               >
-                User List
+                Schedules
               </StyledTypography>
             </StyledListItem>
           )}
         </NavLink>
+        <Divider />
       </List>
       <Divider />
     </div>
